@@ -110,8 +110,8 @@ def judge_binary(question, answer, reference, *, client=None):
     if client is None:
         from openai import OpenAI
         client = OpenAI()
-    response = client.chat.completions.create(
-        model=JUDGE_MODEL, temperature=0,
+    create_kwargs = dict(
+        model=JUDGE_MODEL,
         response_format={"type": "json_object"},
         messages=[
             {"role": "system", "content": BINARY_SYSTEM_PROMPT},
@@ -120,6 +120,13 @@ def judge_binary(question, answer, reference, *, client=None):
                 ensure_ascii=False)},
         ],
     )
+    try:
+        response = client.chat.completions.create(temperature=0, **create_kwargs)
+    except Exception as exc:
+        if "temperature" in str(exc):
+            response = client.chat.completions.create(temperature=1.0, **create_kwargs)
+        else:
+            raise exc
     result = json.loads(response.choices[0].message.content)
     if type(result.get("label")) is not int or result["label"] not in (0, 1):
         raise ValueError("Binary judge label must be integer 0 or 1.")
