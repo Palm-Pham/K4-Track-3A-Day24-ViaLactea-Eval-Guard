@@ -154,14 +154,14 @@ def cohen_kappa(judge_labels: list[int], human_labels: list[int]) -> float:
     """
     if len(judge_labels) != len(human_labels) or not judge_labels:
         raise ValueError("Judge and human labels must be non-empty and the same length.")
-    if any(label not in (0, 1) for label in [*judge_labels, *human_labels]):
+    if any(type(label) is not int or label not in (0, 1) for label in [*judge_labels, *human_labels]):
         raise ValueError("Labels must be binary 0/1.")
     n = len(judge_labels)
     p_o = sum(j == h for j, h in zip(judge_labels, human_labels)) / n
     p_e = sum(judge_labels.count(label) * human_labels.count(label)
               for label in (0, 1)) / n**2
     if p_e == 1:
-        return 0.0
+        raise ValueError("Cohen's kappa is undefined for constant unanimous labels.")
     return (p_o - p_e) / (1 - p_e)
 
 

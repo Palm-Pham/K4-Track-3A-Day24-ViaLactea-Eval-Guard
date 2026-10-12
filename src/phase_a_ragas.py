@@ -3,13 +3,14 @@ from __future__ import annotations
 """Phase A: RAGAS Production Evaluation — 50q, 3 distributions, cluster analysis."""
 
 import json
+import math
 import os
 import sys
 from dataclasses import asdict, dataclass
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import TEST_SET_PATH, ANSWERS_PATH, ARTIFACTS_DIR
-from src.experiment_support import write_json
+from src.experiment_support import model_ids, write_json
 
 Distribution = str  # "factual" | "multi_hop" | "adversarial"
 
@@ -147,14 +148,30 @@ def run_ragas_50q(answers: list[dict]) -> RagasEvaluation:
     ground_truths = [a["ground_truth"] for a in answers]
 
     raw = evaluate_ragas(questions, ans_texts, contexts, ground_truths)
+    if raw.get("status", "evaluated") != "evaluated" or raw.get("metadata", {}).get("scores_available") is False:
+        raise ValueError("RAGAS evaluation is unavailable or partial; rerun the evaluator before exporting scores.")
     per_q = raw.get("per_question", [])
+    if len(per_q) != len(answers):
+        raise ValueError("RAGAS row count must match the input answers.")
+    evaluator_models = raw.get("metadata", {}).get("evaluator_models", [])
+    if not model_ids(evaluator_models, "evaluator models"):
+        raise ValueError("RAGAS must report actual evaluator models.")
 
     results = []
     for a, pq in zip(answers, per_q):
-        faithfulness = getattr(pq, "faithfulness", None) if not isinstance(pq, dict) else pq.get("faithfulness")
-        answer_relevancy = getattr(pq, "answer_relevancy", None) if not isinstance(pq, dict) else pq.get("answer_relevancy")
-        context_precision = getattr(pq, "context_precision", None) if not isinstance(pq, dict) else pq.get("context_precision")
-        context_recall = getattr(pq, "context_recall", None) if not isinstance(pq, dict) else pq.get("context_recall")
+        get_value = pq.get if isinstance(pq, dict) else lambda name, default=None: getattr(pq, name, default)
+        if get_value("status", "evaluated") != "evaluated" or get_value("missing_metrics", []):
+            raise ValueError(f"RAGAS answer {a['id']} has unmeasured metrics.")
+        scores = {}
+        for metric in ("faithfulness", "answer_relevancy", "context_precision", "context_recall"):
+            value = get_value(metric)
+            try:
+                numeric = float(value)
+            except (TypeError, ValueError, OverflowError) as error:
+                raise ValueError(f"RAGAS answer {a['id']}: invalid {metric}.") from error
+            if isinstance(value, bool) or not math.isfinite(numeric) or not 0 <= numeric <= 1:
+                raise ValueError(f"RAGAS answer {a['id']}: invalid {metric}.")
+            scores[metric] = numeric
 
         results.append(RagasResult(
             question_id=a["id"],
@@ -163,13 +180,9 @@ def run_ragas_50q(answers: list[dict]) -> RagasEvaluation:
             answer=a["answer"],
             contexts=a["contexts"],
             ground_truth=a["ground_truth"],
-            faithfulness=float(faithfulness) if faithfulness is not None else 0.0,
-            answer_relevancy=float(answer_relevancy) if answer_relevancy is not None else 0.0,
-            context_precision=float(context_precision) if context_precision is not None else 0.0,
-            context_recall=float(context_recall) if context_recall is not None else 0.0,
+            **scores,
         ))
 
-    evaluator_models = raw.get("metadata", {}).get("evaluator_models", [])
     return RagasEvaluation(results, evaluator_models)
 
 

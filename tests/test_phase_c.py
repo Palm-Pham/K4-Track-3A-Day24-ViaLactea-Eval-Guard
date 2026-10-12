@@ -1,6 +1,7 @@
 """Student guards use injected fake engines/rails; no spaCy download or live API."""
 import asyncio
 import re
+import sys
 from types import SimpleNamespace
 from unittest.mock import AsyncMock,Mock
 
@@ -12,6 +13,36 @@ from src.experiment_support import read_json
 from src.report_contracts import validate_input_results,validate_latency
 
 pytestmark = pytest.mark.student
+
+
+@pytest.fixture
+def guard_chat_client(monkeypatch):
+    model = SimpleNamespace(type="main", engine="openai", model="gpt-6-luna",
+                            parameters={"temperature": 1.0})
+    config = SimpleNamespace(models=[model])
+    class FakeChat:
+        def __init__(self, model, **parameters):
+            self.model_name = model
+            self.parameters = parameters
+        def _get_request_payload(self, input_, **kwargs):
+            return {"model": self.model_name, **self.parameters, **kwargs}
+    constructor = Mock(return_value=object())
+    monkeypatch.setitem(sys.modules, "nemoguardrails", SimpleNamespace(
+        RailsConfig=SimpleNamespace(from_path=Mock(return_value=config)), LLMRails=constructor))
+    monkeypatch.setitem(sys.modules, "langchain_openai", SimpleNamespace(ChatOpenAI=FakeChat))
+    phase.setup_nemo_rails()
+    return constructor.call_args.kwargs.get("llm")
+
+
+def test_setup_uses_chat_client_for_openai_guard_model(guard_chat_client):
+    assert guard_chat_client is not None
+    assert guard_chat_client.model_name == "gpt-6-luna"
+
+
+def test_guard_chat_uses_completion_token_limit(guard_chat_client):
+    payload = guard_chat_client._get_request_payload("input", max_tokens=1024)
+    assert payload["max_completion_tokens"] == 1024
+    assert "max_tokens" not in payload
 
 
 @pytest.fixture
@@ -50,6 +81,17 @@ def test_pii_clean(pii_engines):
     pii_engines[0].analyze.assert_called_once()
 
 
+def test_pii_does_not_block_policy_text_from_unrelated_ner_labels():
+    text = "Nhân viên chính thức hỏi chính sách v2024."
+    analyzer = SimpleNamespace(analyze=Mock(return_value=[
+        SimpleNamespace(entity_type="PERSON", start=0, end=9, score=.85),
+        SimpleNamespace(entity_type="US_DRIVER_LICENSE", start=35, end=40, score=.3)]))
+    anonymizer = SimpleNamespace(anonymize=Mock(return_value=SimpleNamespace(text="redacted")))
+    result = phase.pii_scan(text, analyzer, anonymizer)
+    assert result == {"has_pii": False, "entities": [], "anonymized": text}
+    anonymizer.anonymize.assert_not_called()
+
+
 @pytest.mark.parametrize("blocked",[True,False])
 def test_input_uses_rail_decision(blocked):
     result=SimpleNamespace(response=[{"role":"assistant","content":"policy response"}],
@@ -73,6 +115,22 @@ def test_output_checks_supplied_answer(blocked):
     assert result["final_answer"]==response
     assert rails.generate_async.call_args.kwargs["messages"][-1]["content"]=="answer"
     assert rails.generate_async.call_args.kwargs["options"]["rails"]==["output"]
+
+
+def test_output_rail_falls_back_when_blocked_response_echoes_with_spacing_changes():
+    answer="CCCD của nhân viên là 034095001234."
+    echoed_answer="CCCD của nhân viên  là 034095001234."
+    returned=SimpleNamespace(
+        response=[{"content":echoed_answer}],
+        log=SimpleNamespace(activated_rails=[SimpleNamespace(stop=True)]),
+    )
+    rails=SimpleNamespace(generate_async=AsyncMock(return_value=returned))
+
+    result=asyncio.run(phase.check_output_rail("question",answer,rails))
+
+    assert result["safe"] is False
+    assert result["final_answer"] != answer
+    assert "034095001234" not in result["final_answer"]
 
 
 @pytest.fixture(scope="module")

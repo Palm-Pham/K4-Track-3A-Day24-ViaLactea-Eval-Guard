@@ -40,6 +40,16 @@ def test_kappa_exact(judge,human,expected):
     assert phase.cohen_kappa(judge,human) == pytest.approx(expected)
 
 
+def test_kappa_rejects_undefined_constant_agreement():
+    with pytest.raises(ValueError, match="undefined"):
+        phase.cohen_kappa([1, 1], [1, 1])
+
+
+def test_kappa_requires_integer_binary_labels():
+    with pytest.raises(ValueError, match="0/1"):
+        phase.cohen_kappa([True, False], [1, 0])
+
+
 def test_bias_known_counts():
     rows = [
         phase.JudgeResult(Q,A,B,"A","A","A","r1","r2",True),

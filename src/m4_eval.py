@@ -69,7 +69,7 @@ def _unavailable(questions, answers, contexts, ground_truths, error: str, metada
     ]
     return {**dict.fromkeys(METRICS, 0.0), "per_question": rows,
             "status": "unavailable", "error": error,
-            "metadata": {**metadata, "scores_available": False,
+            "metadata": {**metadata, "evaluator_models": [], "scores_available": False,
                          "score_note": "Zero placeholders; no RAGAS scores were measured."}}
 
 

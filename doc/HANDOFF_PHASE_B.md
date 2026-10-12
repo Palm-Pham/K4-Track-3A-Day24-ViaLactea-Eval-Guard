@@ -1,16 +1,20 @@
 # TÀI LIỆU BÀN GIAO CÔNG VIỆC: PHASE B (LLM-AS-JUDGE & BIAS)
 
 **Dự án:** K4 Track 3A — ViaLactea  
-**Người bàn giao:** Người 1 (Pipeline RAG & Đánh giá RAGAS)  
-**Người tiếp nhận:** Người 2 (Phase B Specialist — LLM Judge & Bias)  
+**Người bàn giao:** Phạm Đình Bảo Khôi (Pipeline RAG & Đánh giá RAGAS)
+
+**Người tiếp nhận:** Nguyễn Thị Hải Mi (Phase B Specialist — LLM Judge & Bias)
 **Ngày bàn giao:** 12/10/2026  
-**Trạng thái Phase A:** Đã hoàn thành 100% (`PASS` toàn bộ tests và contract checker).
+**Trạng thái tại thời điểm bàn giao:** Tests và contract checker Phase A đạt.
+Sau tích hợp, adapter A đã được bổ sung kiểm tra unavailable/partial; lượt JSON A
+cũ vẫn cần log m4 hoặc chạy lại để xác minh đủ metric thật. Tài liệu này ghi
+bàn giao ban đầu; kết quả cuối xem `doc/TEAM.md` và `doc/reports/`.
 
 ---
 
 ## 1. Tổng quan & Trạng thái dữ liệu đã sẵn sàng
 
-Phase A đã hoàn tất việc xây dựng RAG Pipeline, sinh câu trả lời cho toàn bộ 50 câu hỏi test set và đánh giá 4 metrics Ragas. Toàn bộ dữ liệu đầu vào cần thiết cho Người 2 đã được chuẩn bị đầy đủ và đồng bộ tại các đường dẫn sau:
+Phase A đã hoàn tất việc xây dựng RAG Pipeline, sinh câu trả lời cho toàn bộ 50 câu hỏi test set và đánh giá 4 metrics Ragas. Toàn bộ dữ liệu đầu vào cần thiết cho Nguyễn Thị Hải Mi đã được chuẩn bị đầy đủ và đồng bộ tại các đường dẫn sau:
 
 1. **`artifacts/answers_50q.json` (Source A):** Chứa 50 câu trả lời của RAG pipeline sinh bởi mô hình `gpt-6-luna`, kèm đầy đủ contexts và metadata truy vết. File này đóng vai trò là **Ứng viên A** trong các lượt so sánh Pairwise.
 2. **`fixtures/human_labels_10q.json` (Source B & Calibration):** Chứa 10 câu trả lời đối chứng từ mô hình baseline cùng nhãn người (0/1). 5 câu trong file này được dùng làm **Ứng viên B** cho Pairwise; toàn bộ 10 câu được dùng để cân chỉnh và tính Cohen's $\kappa$.
@@ -21,7 +25,7 @@ Phase A đã hoàn tất việc xây dựng RAG Pipeline, sinh câu trả lời 
 
 ## 2. Chi tiết 5 Cặp Câu hỏi Đánh giá Pairwise (Task 5 & 6)
 
-Theo quy định hợp đồng tại `src/report_contracts.py` (`PAIR_QUESTION_IDS = (1, 5, 12, 21, 41)`), Người 2 sẽ thực hiện đánh giá so sánh cặp đôi trên **đúng 5 câu hỏi** sau đây:
+Theo quy định hợp đồng tại `src/report_contracts.py` (`PAIR_QUESTION_IDS = (1, 5, 12, 21, 41)`), Nguyễn Thị Hải Mi sẽ thực hiện đánh giá so sánh cặp đôi trên **đúng 5 câu hỏi** sau đây:
 
 ### 📌 Cặp 1: Câu hỏi ID 1 (Phân phối: `factual`)
 * **Câu hỏi:** *Nhân viên được nghỉ bao nhiêu ngày khi kết hôn?*
@@ -82,13 +86,13 @@ Theo quy định hợp đồng tại `src/report_contracts.py` (`PAIR_QUESTION_I
 
 ---
 
-## 3. Bản đồ Nhiệm vụ cho Người 2 (`src/phase_b_judge.py`)
+## 3. Bản đồ Nhiệm vụ cho Nguyễn Thị Hải Mi (`src/phase_b_judge.py`)
 
-File code chính của bạn: **[src/phase_b_judge.py](file:///home/palm/Desktop/vin_ai20k/K4-Track-3A-Day24-ViaLactea-Eval-Guard/src/phase_b_judge.py)**. Cần hoàn thiện 4 tasks (Tasks 5 đến 8):
+File code chính của bạn: **[src/phase_b_judge.py](../src/phase_b_judge.py)**. Cần hoàn thiện 4 tasks (Tasks 5 đến 8):
 
 ```
                      ┌────────────────────────────────────────┐
-                     │          Người 2: Phase B              │
+                     │          Phase B: LLM Judge              │
                      └──────────────────┬─────────────────────┘
                                         │
         ┌───────────────────────────────┼───────────────────────────────┐
@@ -176,7 +180,7 @@ Chạy kiểm tra tính hợp lệ của bài nộp:
 ```
 *Yêu cầu:* `PASS Phase B artifact`.
 
-### Bước 4: Điền Báo cáo [doc/reports/bias_report.md](file:///home/palm/Desktop/vin_ai20k/K4-Track-3A-Day24-ViaLactea-Eval-Guard/doc/reports/bias_report.md)
+### Bước 4: Điền Báo cáo [doc/reports/bias_report.md](reports/bias_report.md)
 * Điền thông tin cá nhân (Họ tên, MSSV).
 * Điền bảng 5 cặp so sánh (id, candidate A/B, winner pass 1, winner pass 2, final winner, reasoning, scores).
 * Điền bảng 10 câu Calibration và chỉ số Cohen's $\kappa$.
@@ -187,7 +191,7 @@ Chạy kiểm tra tính hợp lệ của bài nộp:
 ## 5. Checklist Tránh Mất Điểm (Rubric Warning)
 
 > [!WARNING]
-> 1. **Tuyệt đối không để sót `# TODO`:** Xóa sạch comment `# TODO` trong [src/phase_b_judge.py](file:///home/palm/Desktop/vin_ai20k/K4-Track-3A-Day24-ViaLactea-Eval-Guard/src/phase_b_judge.py) sau khi hoàn thiện (vi phạm bị trừ **5 điểm/module**).
+> 1. **Tuyệt đối không để sót `# TODO`:** Xóa sạch comment `# TODO` trong [src/phase_b_judge.py](../src/phase_b_judge.py) sau khi hoàn thiện (vi phạm bị trừ **5 điểm/module**).
 > 2. **Không leak nhãn người vào prompt:** Tuyệt đối không gửi `human_label` hay `human_note` vào prompt đánh giá của LLM; việc so sánh với nhãn người chỉ được thực hiện sau khi LLM đã đưa ra kết quả độc lập.
 > 3. **Độ ổn định của temperature:** Đảm bảo prompt pairwise chỉ định `temperature=1.0` để tương thích hoàn toàn với model `gpt-6-luna`.
 > 4. **Giữ nguyên định dạng dữ liệu:** Không tự ý thay đổi nguồn A (phải là `artifacts/answers_50q.json`) hoặc nguồn B (`fixtures/human_labels_10q.json`).

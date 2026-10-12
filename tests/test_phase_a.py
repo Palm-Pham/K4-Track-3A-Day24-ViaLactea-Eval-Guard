@@ -45,6 +45,52 @@ def test_ragas_adapter_preserves_rows(monkeypatch):
     assert list(evaluate.call_args.args[0]) == [q["question"] for q in questions]
 
 
+@pytest.fixture
+def adapter_input():
+    return [{"id": 1, "distribution": "factual", "question": "Q",
+             "answer": "A", "contexts": ["C"], "ground_truth": "GT"}]
+
+
+@pytest.mark.parametrize("status", ["unavailable", "partial"])
+def test_ragas_adapter_rejects_unmeasured_scores(monkeypatch, adapter_input, status):
+    row = dict(faithfulness=0.0, answer_relevancy=0.0,
+               context_precision=0.0, context_recall=0.0, status=status,
+               missing_metrics=["faithfulness"])
+    evaluate = Mock(return_value={"per_question": [row], "status": status,
+                                  "metadata": {"evaluator_models": ["eval-test"]}})
+    monkeypatch.setitem(sys.modules, "src.m4_eval", SimpleNamespace(evaluate_ragas=evaluate))
+    with pytest.raises(ValueError, match="unavailable|partial|unmeasured"):
+        run_ragas_50q(adapter_input)
+
+
+@pytest.mark.parametrize("rows", [[], [{}, {}]])
+def test_ragas_adapter_rejects_wrong_row_count(monkeypatch, adapter_input, rows):
+    evaluate = Mock(return_value={"per_question": rows,
+                                  "metadata": {"evaluator_models": ["eval-test"]}})
+    monkeypatch.setitem(sys.modules, "src.m4_eval", SimpleNamespace(evaluate_ragas=evaluate))
+    with pytest.raises(ValueError, match="row count"):
+        run_ragas_50q(adapter_input)
+
+
+@pytest.mark.parametrize("value", [None, float("nan"), float("inf"), -0.1, 1.1, True])
+def test_ragas_adapter_rejects_invalid_metric(monkeypatch, adapter_input, value):
+    row = dict(faithfulness=value, answer_relevancy=.7,
+               context_precision=.6, context_recall=.5)
+    evaluate = Mock(return_value={"per_question": [row],
+                                  "metadata": {"evaluator_models": ["eval-test"]}})
+    monkeypatch.setitem(sys.modules, "src.m4_eval", SimpleNamespace(evaluate_ragas=evaluate))
+    with pytest.raises(ValueError, match="faithfulness"):
+        run_ragas_50q(adapter_input)
+
+
+def test_unavailable_evaluator_does_not_claim_models(monkeypatch, adapter_input):
+    from src import m4_eval
+    monkeypatch.setattr(m4_eval, "EVAL_ENABLED", False)
+    result = m4_eval.evaluate_ragas(["Q"], ["A"], [["C"]], ["GT"])
+    assert result["status"] == "unavailable"
+    assert result["metadata"]["evaluator_models"] == []
+
+
 def test_bottom_nonempty_sorted_complete(dummy_results):
     rows = bottom_10(dummy_results)
     assert len(rows) == 5

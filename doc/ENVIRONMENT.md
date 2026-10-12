@@ -74,6 +74,28 @@ stack cài chưa xong, ghi lỗi thật; không điền “tương thích” d�
 
 ## Tạo môi trường unit test offline
 
+### Chạy riêng guard live bằng Docker Linux trên Windows
+
+Nếu máy thiếu MSVC để build Annoy, nhóm có thể dùng runtime guard Linux đã
+được kiểm tra qua `infra/Dockerfile.guard-live`. Image cài Python 3.11,
+compiler Linux, các pins lõi NeMo/LangChain/OpenAI và spaCy `en_core_web_lg`.
+Đây chỉ là runtime Phase C, không thay môi trường pipeline/RAGAS của Phase A.
+
+Chạy từ gốc repo trong PowerShell, với Docker Desktop Linux engine đã bật:
+
+```powershell
+docker build -f infra/Dockerfile.guard-live -t vialactea-guard-live:day24 infra
+docker run --rm --env-file .env --mount "type=bind,source=$((Get-Location).Path),target=/lab" vialactea-guard-live:day24 python -u scripts/run_experiments.py --phase c --live --latency-samples 20
+```
+
+Build context chỉ là `infra/`; image không chứa source hay `.env`. Run mount
+repo để runner lưu JSON vào `artifacts/`, key được truyền lúc chạy. Lệnh live
+gửi fixtures/policy đến model API và có chi phí; không thay bằng dữ liệu nhân
+viên thật. Lượt đầu có thể tải thêm embedding model của NeMo; engines/model
+khởi tạo ngoài phép đo Task 12. Ghi phiên bản/runtime thực tế trong TEAM.
+
+### Unit tests offline
+
 Khi chỉ sửa logic/scaffold, không cần cài NeMo, ML model hoặc C++ compiler.
 Tạo môi trường riêng với các dependencies đã pin:
 

@@ -58,7 +58,10 @@ hơn thắng (id 5: 15 vs 33; id 12: 28 vs 50; id 21: 82 vs 98). Hai case answer
 thắng đều được giải thích bằng nội dung, không phải độ dài: id 1 B dài hơn vì chứa
 đúng ý "có lương" của reference; id 41 A dài hơn và là answer duy nhất đúng phiên
 bản chính sách. Đây là dấu hiệu thống kê trên 5 cặp, chưa đủ để kết luận judge
-không có verbosity bias — bộ cặp không có case answer dài hơn nhưng sai.
+không có verbosity bias. ID 5 có B dài hơn nhưng sai người phê duyệt và vẫn thua
+A từ chối trả lời; đây là một case phản chứng cho việc luôn ưu tiên độ dài.
+Bộ 5 cặp còn nhỏ, khác nhau cả về nội dung lẫn độ dài, nên chưa tách được ảnh
+hưởng riêng của độ dài lên quyết định judge.
 
 ## Calibration đúng model_answer
 
