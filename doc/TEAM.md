@@ -1,6 +1,6 @@
 # Nhóm thực hiện K4 Track 3A
 
-Tên nhóm: {{Tên nhóm}}
+Tên nhóm: ViaLactea
 
 Repo chung: {{Link repo}}
 
