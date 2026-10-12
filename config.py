@@ -44,10 +44,9 @@ OUTPUT_SET_PATH = os.path.join(FIXTURES_DIR, "output_set_4.json")
 GUARDRAILS_CONFIG_DIR = os.path.join(ROOT_DIR, "guardrails")
 PAIR_QUESTION_IDS = (1, 5, 12, 21, 41)
 
-# --- LLM Models ---
-GENERATION_MODEL = "gpt-6-luna"
-JUDGE_MODEL = "gpt-6-luna"
-RAGAS_MODEL = "gpt-6-luna"
+# --- LLM Judge ---
+GENERATION_MODEL = "gpt-4o-mini"
+JUDGE_MODEL = "gpt-4o-mini"
 
 # --- Guardrail latency budget ---
 LATENCY_BUDGET_P95_MS = 500  # Full guard target; Task 12 currently measures input guards only.
