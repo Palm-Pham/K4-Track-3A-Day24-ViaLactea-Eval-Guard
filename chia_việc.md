@@ -14,7 +14,13 @@ và [doc/RUBRIC.md](doc/RUBRIC.md). Starter chưa có m1–m5 hay kết quả tr
   runner B vẫn validate cả file dù chỉ chọn 5 câu để so sánh. Phase A cần
   evaluator m4; Phase C dùng fixtures, không phụ thuộc kết quả A/B.
 - Các lượt chạy live cần môi trường, model và API key đã sẵn sàng.
-- Người 1/2/3 bàn giao JSON kết quả và phân tích cho Người 4 tổng hợp Blueprint.
+- Người 1/2 bàn giao JSON kết quả và phân tích; Người 3 bàn giao các hàm guard
+  và phân tích kết quả guard cho Người 4 tổng hợp Blueprint.
+- Người 3 làm Tasks 9a–11; Người 4 làm Task 12 trong cùng `src/phase_c_guard.py`.
+  Hai người thống nhất giao diện `pii_scan()`/`check_input_rail()` và chỉ sửa
+  các hàm được giao. Người 4 có thể viết phép đo bằng mocks trước khi tích hợp.
+  Sau khi đủ Tasks 9a–12, Người 4 chạy một batch C chung với Người 3 đối chiếu
+  kết quả guard, tránh chạy live lặp.
 - Mỗi người tự điền `INDIVIDUAL` và bằng chứng commit trong TEAM.
 
 ---
@@ -27,8 +33,8 @@ và [doc/RUBRIC.md](doc/RUBRIC.md). Starter chưa có m1–m5 hay kết quả tr
 | --- | --- | --- | --- | --- |
 | **Người 1** | **RAG Pipeline & Phase A (RAGAS Eval)** | [src/phase_a_ragas.py](src/phase_a_ragas.py), [doc/reports/failure_clusters.md](doc/reports/failure_clusters.md) | Module `m1`–`m5` từ Day 18, Qdrant Docker | `artifacts/answers_50q.json`, `artifacts/ragas_50q.json`, Báo cáo Phase A |
 | **Người 2** | **Phase B Specialist (LLM Judge & Bias)** | [src/phase_b_judge.py](src/phase_b_judge.py), [doc/reports/bias_report.md](doc/reports/bias_report.md) | `fixtures/human_labels_10q.json`, `fixtures/test_set_50q.json`, file đủ 50 answers khi chạy live | `artifacts/judge_results.json`: 5 cặp A/B, 10 binary judgments, κ/bias; Báo cáo Phase B |
-| **Người 3** | **Phase C Specialist (Guardrails & Latency)** | [src/phase_c_guard.py](src/phase_c_guard.py) | `fixtures/adversarial_set_20.json`, `fixtures/clean_set_8.json`, `fixtures/output_set_4.json`, cấu hình trong `guardrails/` | `artifacts/guard_results.json`: 20 attacks, 8 clean, 4 outputs, raw samples và P50/P95/P99 hai tầng input |
-| **Người 4** | **Blueprint & Tích hợp bài nộp** | [doc/reports/blueprint.md](doc/reports/blueprint.md), [doc/TEAM.md](doc/TEAM.md) | Kết quả đo từ Người 1, 2, 3; Schema checker | Báo cáo `blueprint.md`, File `TEAM.md` hoàn chỉnh, Pass `scripts/check_lab.py` |
+| **Người 3** | **Guardrails — Tasks 9a, 9b, 10, 11** | [src/phase_c_guard.py](src/phase_c_guard.py): các hàm guard và suite | `fixtures/adversarial_set_20.json`, `fixtures/clean_set_8.json`, `fixtures/output_set_4.json`, cấu hình trong `guardrails/` | Logic guard, tests và phân tích 20 attacks, 8 clean, 4 outputs trong batch C chung |
+| **Người 4** | **Latency, Blueprint & Tích hợp — Tasks 12, 13** | [src/phase_c_guard.py](src/phase_c_guard.py): `measure_p95_latency()`, [doc/reports/blueprint.md](doc/reports/blueprint.md), [doc/TEAM.md](doc/TEAM.md) | Hàm guard từ Người 3, `fixtures/clean_set_8.json`, kết quả A/B và schema checker | `artifacts/guard_results.json` từ batch C chung, raw samples/P50/P95/P99, Blueprint, TEAM và kiểm tra bài nộp |
 
 <!-- markdownlint-enable MD013 -->
 
@@ -115,7 +121,7 @@ và [doc/RUBRIC.md](doc/RUBRIC.md). Starter chưa có m1–m5 hay kết quả tr
 
 ---
 
-### 👤 Người 3: Guardrail Stack & Đo Độ trễ (Phase C: 35đ + 3đ bonus)
+### 👤 Người 3: Guardrail Stack (Tasks 9a, 9b, 10, 11)
 
 *Có thể code và test ngay; chạy live khi môi trường/model/API key đã sẵn sàng.
 Không cần answers hoặc kết quả Phase A/B; bàn giao kết quả cho Người 4.*
@@ -134,26 +140,20 @@ Không cần answers hoặc kết quả Phase A/B; bàn giao kết quả cho Ng�
      Guardrails (kiểm tra rò rỉ thông tin nhạy cảm). Chạy đủ 4 cases trong
      `fixtures/output_set_4.json`: giữ nguyên output sạch, thay/redact output
      không an toàn; đọc quyết định từ activated rails.
-   - **Task 12:** `measure_p95_latency()`: Đo tuần tự 2 tầng input (Presidio +
-     NeMo), warm-up 2 lượt (loại bỏ khỏi mẫu), thu thập ≥ 20 mẫu hợp lệ, tính
-     phân vị P50, P95, P99 tuyến tính. Mục tiêu target: P95 < 500ms.
-     Tái sử dụng engines, chạy trong một event loop; luôn đo đủ cả hai tầng
-     dù Presidio chặn. Lưu raw samples theo từng tầng và tổng từng sample.
-     Scope là `input_layers_sequential`, không phải RAG/output/full guard
-     hoặc request dừng sớm. Vượt budget vẫn ghi số thật và phân tích bottleneck.
 
-2. **Kiểm thử & Báo cáo:**
+2. **Kiểm thử & Bàn giao:**
    - Chạy unit tests: `python -m pytest tests/test_phase_c.py -q`.
-   - Chạy thực nghiệm live: `python scripts/run_experiments.py --phase c --live
-     --latency-samples 20` (tạo `artifacts/guard_results.json`).
-   - Bàn giao `guard_results.json` và phân tích bottleneck/chặn nhầm cho Người 4.
+     Tests latency có thể chưa pass khi Task 12 của Người 4 chưa hoàn thành.
+   - Bàn giao các hàm guard đã kiểm tra cho Người 4 để tích hợp phép đo latency.
+   - Đối chiếu 20 attacks, 8 clean và 4 outputs từ batch C chung; xử lý chặn
+     nhầm/lọt tấn công và cung cấp phân tích cho Blueprint.
 
 ---
 
-### 👤 Người 4: Blueprint & Tích hợp bài nộp (Task 13 + Tổng kết)
+### 👤 Người 4: Đo Latency, Blueprint & Tích hợp bài nộp (Tasks 12, 13)
 
-*Có thể bắt đầu: Viết phần phân tích kiến trúc/CI gates ngay từ đầu, sau đó tích
-hợp số liệu.*
+*Có thể viết Task 12 với mocks và khung Blueprint ngay; phép đo thật cần các
+hàm guard của Người 3. Hỗ trợ môi trường chung và tích hợp kết quả A/B/C.*
 
 1. **Quản lý Repo & Điều phối:**
    - Trước lớp: khởi tạo GitHub repo chung `K4-L3-DAY24-TenNhom-Eval-Guard`,
@@ -162,13 +162,26 @@ hợp số liệu.*
    - Đảm bảo **tất cả 4 thành viên đều có commit** trên repo (yêu cầu bắt buộc
      để được chấm điểm).
 
-2. **Báo cáo Blueprint CI/CD ([doc/reports/blueprint.md](doc/reports/blueprint.md)):**
+2. **Task 12 — Đo latency và chạy batch C chung:**
+   - Implement `measure_p95_latency()` trong [src/phase_c_guard.py](src/phase_c_guard.py):
+     đo tuần tự Presidio + NeMo input, warm-up thật 2 lượt bị loại khỏi mẫu,
+     thu thập ≥ 20 mẫu hợp lệ và tính P50/P95/P99 tuyến tính.
+   - Tái sử dụng engines, chạy trong một event loop; luôn đo đủ cả hai tầng
+     dù Presidio chặn. Lưu raw samples theo từng tầng và tổng từng sample.
+     Scope là `input_layers_sequential`, không phải RAG/output/full guard
+     hoặc request dừng sớm. Target P95 < 500ms; vượt budget vẫn ghi số thật.
+   - Tích hợp Tasks 9a–11 từ Người 3, chạy `python -m pytest tests/test_phase_c.py -q`.
+   - Chạy một batch thật: `python scripts/run_experiments.py --phase c --live
+     --latency-samples 20` để tạo `artifacts/guard_results.json` chứa cả guard
+     và latency. Cùng Người 3 đối chiếu kết quả; chạy lại khi cần sửa lỗi.
+
+3. **Task 13 — Blueprint CI/CD ([doc/reports/blueprint.md](doc/reports/blueprint.md)):**
    - Mô tả kiến trúc luồng dữ liệu bảo vệ nhiều lớp: `Input -> Presidio -> NeMo
      input -> RAG -> NeMo output -> Response`.
    - Định nghĩa hành động khi gặp lỗi (failure action), lưu vết (audit log) và cơ
      chế fallback.
-   - Nhận số liệu độ trễ từ Người 3 để điền bảng latency (P50, P95, P99), giải
-     thích bottleneck nếu vượt ngưỡng 500ms.
+   - Dùng số đo Task 12 để điền bảng latency (P50, P95, P99), giải thích
+     bottleneck nếu vượt target 500ms; nhận phân tích guard từ Người 3.
    - Đề xuất CI gates theo mẫu Blueprint: RAGAS faithfulness ≥ 0.75,
      avg_score ≥ 0.65 trên 50 câu; attacks ≥ 18/20, clean 8/8 allowed và
      output cases đúng. Mốc lab bắt buộc vẫn là attacks ≥ 15/20.
@@ -179,7 +192,7 @@ hợp số liệu.*
    - Thiết kế kế hoạch monitoring, xử lý data drift và false positives trong
      production.
 
-3. **Kiểm tra bài nộp toàn diện & Bàn giao:**
+4. **Kiểm tra bài nộp toàn diện & Bàn giao:**
    - Đối chiếu [doc/TEAM.md](doc/TEAM.md) với đóng góp và commit của từng người.
    - Chạy kiểm tra hợp đồng bài nộp: `python scripts/check_lab.py`
      (đối chiếu schema, nguồn/hash, model metadata, counts và phép tính).
@@ -216,15 +229,15 @@ khi lịch coach cho phép. Task 13 và tổng hợp nằm trong quỹ thời gi
 
 15' ── 45': [Phase A]
       • Người 1: Tasks 1–4 -> tests -> chạy A live -> failure_clusters.md.
-      • Người 4: Viết khung kiến trúc trong blueprint.md.
+      • Người 4: Viết khung Blueprint; chuẩn bị Task 12 với mocks nếu lịch cho phép.
 
 45' ── 75': [Phase B]
       • Người 2: Tasks 5–8 -> tests -> chạy B live -> bias_report.md.
       • Người 4: Tổng hợp kết quả A/B vào Blueprint.
 
 75' ── 105': [Phase C & Tổng hợp]
-      • Người 3: Tasks 9a–12 -> tests -> chạy C live, bàn giao kết quả.
-      • Người 4: Hoàn thiện Blueprint/TEAM, chạy checker và kiểm tra bài nộp.
+      • Người 3: Tasks 9a–11 -> tests guard -> bàn giao hàm, phân tích kết quả.
+      • Người 4: Task 12 -> tests C -> chạy batch C chung -> Blueprint/TEAM/checker.
 ```
 
 Mọi thành viên nộp cùng link repo theo README và hướng dẫn coach; trưởng nhóm
@@ -233,6 +246,9 @@ ghi commit nộp. Deadline mặc định 23:59 ngày lab (UTC+07).
 ---
 
 ## 5. Các lưu ý quan trọng để không bị mất điểm (Checklist Rubric)
+
+Điểm Phase C (35đ + tối đa 3đ bonus) là điểm phần việc chung của Người 3/4;
+việc chia Tasks 9a–12 không thay đổi rubric hay tự đặt tỷ lệ điểm cá nhân.
 
 > [!WARNING]
 >
