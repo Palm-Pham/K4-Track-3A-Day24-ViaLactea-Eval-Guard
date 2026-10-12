@@ -1,27 +1,4 @@
-Ran command: List directory (`ls -la`)
-Viewed README.md:1-158
-Viewed ASSIGNMENT.md:1-161
-Viewed CHECKPOINTS.md:1-85
-Viewed TEAM.md:1-51
-Viewed RUBRIC.md:1-84
-Ran command: List src directory (`ls -la src/`)
-Ran command: List files in scripts, doc/reports, tests (`ls -la scripts/ doc/reports/ tests/`)
-Viewed phase_a_ragas.py:1-100
-Viewed phase_a_ragas.py:101-246
-Viewed phase_b_judge.py:1-120
-Viewed phase_b_judge.py:121-216
-Viewed phase_c_guard.py:1-140
-Viewed phase_c_guard.py:140-273
-Viewed setup_answers.py:1-70
-Ran command: List fixtures (`ls -la fixtures/`)
-Viewed SUBMISSION.md:1-134
-Viewed experiment_runners.py:1-120
-Viewed experiment_runners.py:120-137
-Viewed blueprint.md:1-60
-Viewed failure_clusters.md:1-46
-Viewed bias_report.md:1-41
-
-Dựa trên toàn bộ nội dung file [README.md](file:///home/palm/Desktop/vin_ai20k/K4-Track-3A-Day24-ViaLactea-Eval-Guard/README.md), [ASSIGNMENT.md](file:///home/palm/Desktop/vin_ai20k/K4-Track-3A-Day24-ViaLactea-Eval-Guard/doc/ASSIGNMENT.md), [RUBRIC.md](file:///home/palm/Desktop/vin_ai20k/K4-Track-3A-Day24-ViaLactea-Eval-Guard/doc/RUBRIC.md) và [CHECKPOINTS.md](file:///home/palm/Desktop/vin_ai20k/K4-Track-3A-Day24-ViaLactea-Eval-Guard/doc/CHECKPOINTS.md), dưới đây là đề xuất phân chia công việc chi tiết và tối ưu nhất cho **nhóm 4 người**, nêu rõ **các phần việc có thể làm song song hoàn toàn** mà không bị nghẽn (block) bởi các thành viên khác.
+# Kế hoạch phân chia công việc nhóm 4 người — K4 Track 3A
 
 ---
 
@@ -51,7 +28,7 @@ Hệ thống được thiết kế theo kiến trúc module hóa rất cao, cho 
   3. **Khung báo cáo Blueprint (Task 13):** Thành viên phụ trách CI/CD có thể bắt đầu phác thảo luồng dữ liệu, chính sách xử lý lỗi (failure action), và tiêu chí CI gates ngay.
 
 - **Điểm đồng bộ duy nhất (Single Sync Point):**
-  - Chạy thực nghiệm live cho **Phase A** (`run_experiments.py --phase a --live`) và **Phase B** (`run_experiments.py --phase b --live`) cần file [artifacts/answers_50q.json](file:///home/palm/Desktop/vin_ai20k/K4-Track-3A-Day24-ViaLactea-Eval-Guard/artifacts/answers_50q.json). File này do **Người 1** sinh ra bằng lệnh `python scripts/setup_answers.py --live`.
+  - Chạy thực nghiệm live cho **Phase A** (`run_experiments.py --phase a --live`) và **Phase B** (`run_experiments.py --phase b --live`) cần file [artifacts/answers_50q.json](artifacts/answers_50q.json). File này do **Người 1** sinh ra bằng lệnh `python scripts/setup_answers.py --live`.
 
 ---
 
@@ -59,10 +36,10 @@ Hệ thống được thiết kế theo kiến trúc module hóa rất cao, cho 
 
 | Thành viên | Vai trò chính | File code & Báo cáo phụ trách | Đầu vào (Input) | Kết quả đầu ra (Deliverables) |
 |---|---|---|---|---|
-| **Người 1** | **RAG Pipeline & Phase A (RAGAS Eval)** | - [src/phase_a_ragas.py](file:///home/palm/Desktop/vin_ai20k/K4-Track-3A-Day24-ViaLactea-Eval-Guard/src/phase_a_ragas.py)<br>- [doc/reports/failure_clusters.md](file:///home/palm/Desktop/vin_ai20k/K4-Track-3A-Day24-ViaLactea-Eval-Guard/doc/reports/failure_clusters.md) | - Module `m1`–`m5` từ Day 18<br>- Qdrant Docker | - `artifacts/answers_50q.json`<br>- `artifacts/ragas_50q.json`<br>- Báo cáo phân tích lỗi Phase A |
-| **Người 2** | **Phase B Specialist (LLM Judge & Bias)** | - [src/phase_b_judge.py](file:///home/palm/Desktop/vin_ai20k/K4-Track-3A-Day24-ViaLactea-Eval-Guard/src/phase_b_judge.py)<br>- [doc/reports/bias_report.md](file:///home/palm/Desktop/vin_ai20k/K4-Track-3A-Day24-ViaLactea-Eval-Guard/doc/reports/bias_report.md) | - `fixtures/human_labels_10q.json`<br>- 5 answers (khi chạy live) | - `artifacts/judge_results.json`<br>- Báo cáo phân tích bias & Cohen's κ |
-| **Người 3** | **Phase C Specialist (Guardrails & Latency)** | - [src/phase_c_guard.py](file:///home/palm/Desktop/vin_ai20k/K4-Track-3A-Day24-ViaLactea-Eval-Guard/src/phase_c_guard.py) | - `fixtures/adversarial_set_20.json`<br>- `fixtures/clean_set_8.json`<br>- `guardrails/config.yml` | - `artifacts/guard_results.json`<br>- Kết quả đo P95 Latency 2 tầng |
-| **Người 4** | **DevOps, Blueprint CI/CD & Integration Lead** | - [doc/reports/blueprint.md](file:///home/palm/Desktop/vin_ai20k/K4-Track-3A-Day24-ViaLactea-Eval-Guard/doc/reports/blueprint.md)<br>- [doc/TEAM.md](file:///home/palm/Desktop/vin_ai20k/K4-Track-3A-Day24-ViaLactea-Eval-Guard/doc/TEAM.md) | - Kết quả đo từ Người 1, 2, 3<br>- Schema checker | - Báo cáo `blueprint.md`<br>- File `TEAM.md` hoàn chỉnh<br>- Pass `scripts/check_lab.py` |
+| **Người 1** | **RAG Pipeline & Phase A (RAGAS Eval)** | - [src/phase_a_ragas.py](src/phase_a_ragas.py)<br>- [doc/reports/failure_clusters.md](doc/reports/failure_clusters.md) | - Module `m1`–`m5` từ Day 18<br>- Qdrant Docker | - `artifacts/answers_50q.json`<br>- `artifacts/ragas_50q.json`<br>- Báo cáo phân tích lỗi Phase A |
+| **Người 2** | **Phase B Specialist (LLM Judge & Bias)** | - [src/phase_b_judge.py](src/phase_b_judge.py)<br>- [doc/reports/bias_report.md](doc/reports/bias_report.md) | - `fixtures/human_labels_10q.json`<br>- 5 answers (khi chạy live) | - `artifacts/judge_results.json`<br>- Báo cáo phân tích bias & Cohen's κ |
+| **Người 3** | **Phase C Specialist (Guardrails & Latency)** | - [src/phase_c_guard.py](src/phase_c_guard.py) | - `fixtures/adversarial_set_20.json`<br>- `fixtures/clean_set_8.json`<br>- `guardrails/config.yml` | - `artifacts/guard_results.json`<br>- Kết quả đo P95 Latency 2 tầng |
+| **Người 4** | **DevOps, Blueprint CI/CD & Integration Lead** | - [doc/reports/blueprint.md](doc/reports/blueprint.md)<br>- [doc/TEAM.md](doc/TEAM.md) | - Kết quả đo từ Người 1, 2, 3<br>- Schema checker | - Báo cáo `blueprint.md`<br>- File `TEAM.md` hoàn chỉnh<br>- Pass `scripts/check_lab.py` |
 
 ---
 
@@ -75,7 +52,7 @@ Hệ thống được thiết kế theo kiến trúc module hóa rất cao, cho 
    - Đưa 5 module `m1_chunking.py`, `m2_search.py`, `m3_rerank.py`, `m4_eval.py`, `m5_enrichment.py` vào `src/`.
    - Chạy Qdrant: `docker compose -f infra/docker-compose.yml up -d`.
    - Chạy lệnh sinh câu trả lời trước lớp: `python scripts/setup_answers.py --live` để tạo ra `artifacts/answers_50q.json` (chia sẻ file này cho Người 2).
-2. **Implement các Tasks trong [src/phase_a_ragas.py](file:///home/palm/Desktop/vin_ai20k/K4-Track-3A-Day24-ViaLactea-Eval-Guard/src/phase_a_ragas.py):**
+2. **Implement các Tasks trong [src/phase_a_ragas.py](src/phase_a_ragas.py):**
    - **Task 1:** `group_by_distribution()`: Phân nhóm 50 câu (20 factual, 20 multi_hop, 10 adversarial).
    - **Task 2:** `run_ragas_50q()`: Gọi `m4_eval.evaluate_ragas` tính 4 metric (faithfulness, answer_relevancy, context_precision, context_recall), trả về `RagasEvaluation`.
    - **Task 3:** `bottom_10()`: Lọc 10 câu có điểm `avg_score` thấp nhất, ánh xạ lỗi và đề xuất sửa theo `DIAGNOSTIC_TREE`.
@@ -83,14 +60,14 @@ Hệ thống được thiết kế theo kiến trúc module hóa rất cao, cho 
 3. **Kiểm thử & Báo cáo:**
    - Chạy unit tests: `pytest tests/test_phase_a.py`.
    - Chạy thực nghiệm thật: `python scripts/run_experiments.py --phase a --live` (tạo `artifacts/ragas_50q.json`).
-   - Điền đầy đủ báo cáo [doc/reports/failure_clusters.md](file:///home/palm/Desktop/vin_ai20k/K4-Track-3A-Day24-ViaLactea-Eval-Guard/doc/reports/failure_clusters.md).
+   - Điền đầy đủ báo cáo [doc/reports/failure_clusters.md](doc/reports/failure_clusters.md).
 
 ---
 
 ### 👤 Người 2: Đánh giá LLM-as-Judge & Phân tích Thiên lệch (Phase B — 35 điểm + 3 điểm bonus)
 *Có thể bắt đầu: Viết code và test ngay từ đầu; chỉ cần Người 1 gửi `answers_50q.json` khi chạy live.*
 
-1. **Implement các Tasks trong [src/phase_b_judge.py](file:///home/palm/Desktop/vin_ai20k/K4-Track-3A-Day24-ViaLactea-Eval-Guard/src/phase_b_judge.py):**
+1. **Implement các Tasks trong [src/phase_b_judge.py](src/phase_b_judge.py):**
    - **Task 5:** `pairwise_judge()`: Viết prompt gọi LLM chấm điểm so sánh A vs B theo 3 tiêu chí (độ chính xác, đầy đủ, súc tích) dựa trên `reference`, trả JSON `winner` ("A"|"B"|"tie"), `reasoning`, `scores`.
    - **Task 6:** `swap_and_average()`: Chạy 2 lượt đảo vị trí (A/B và B/A) để khử position bias; quy đổi pass 2 về A/B ban đầu; chỉ đồng thuận nếu cả 2 lượt cùng chọn 1 đáp án.
    - **Task 7:** `cohen_kappa()`: Tính hệ số Cohen's κ giữa 10 nhãn của judge và 10 nhãn người từ `human_labels_10q.json` (dùng `sklearn.metrics.cohen_kappa_score` hoặc công thức tính tay).
@@ -98,14 +75,14 @@ Hệ thống được thiết kế theo kiến trúc module hóa rất cao, cho 
 2. **Kiểm thử & Báo cáo:**
    - Chạy unit tests offline với mock: `pytest tests/test_phase_b.py`.
    - Chạy thực nghiệm live: `python scripts/run_experiments.py --phase b --live` (tạo `artifacts/judge_results.json`).
-   - Điền đầy đủ báo cáo [doc/reports/bias_report.md](file:///home/palm/Desktop/vin_ai20k/K4-Track-3A-Day24-ViaLactea-Eval-Guard/doc/reports/bias_report.md) (lưu ý mục tiêu bonus: Cohen's $\kappa > 0.6$).
+   - Điền đầy đủ báo cáo [doc/reports/bias_report.md](doc/reports/bias_report.md) (lưu ý mục tiêu bonus: Cohen's $\kappa > 0.6$).
 
 ---
 
 ### 👤 Người 3: Bộ lọc Bảo vệ Guardrails & Đo lường Độ trễ (Phase C — 35 điểm + 3 điểm bonus)
 *Có thể bắt đầu: Song song 100% độc lập từ đầu đến cuối, không cần đợi bất kỳ ai.*
 
-1. **Implement các Tasks trong [src/phase_c_guard.py](file:///home/palm/Desktop/vin_ai20k/K4-Track-3A-Day24-ViaLactea-Eval-Guard/src/phase_c_guard.py):**
+1. **Implement các Tasks trong [src/phase_c_guard.py](src/phase_c_guard.py):**
    - **Task 9a:** `pii_scan()`: Quét và che giấu PII (CCCD 12 số, CMND 9 số, SĐT Việt Nam, Email) bằng Presidio.
    - **Task 9b:** `check_input_rail()`: Tầng lọc đầu vào async với NeMo Guardrails (kiểm tra jailbreak, off-topic, prompt injection dựa vào `result.log.activated_rails`).
    - **Task 10:** `run_adversarial_suite()`: Chạy bộ 28 câu (20 attacks + 8 câu sạch) qua 2 lớp (Presidio -> NeMo input rail). Mục tiêu: $\ge 15/20$ attacks bị chặn (bonus $\ge 18/20$) và $8/8$ câu sạch được phép qua (`false_positive_rate = 0`).
@@ -124,14 +101,14 @@ Hệ thống được thiết kế theo kiến trúc module hóa rất cao, cho 
 1. **Quản lý Repo & Điều phối:**
    - Khởi tạo GitHub repo nhóm, tạo branch làm việc cho các thành viên.
    - Đảm bảo **tất cả 4 thành viên đều có commit** trên repo (yêu cầu bắt buộc để được chấm điểm).
-2. **Báo cáo Blueprint CI/CD ([doc/reports/blueprint.md](file:///home/palm/Desktop/vin_ai20k/K4-Track-3A-Day24-ViaLactea-Eval-Guard/doc/reports/blueprint.md)):**
+2. **Báo cáo Blueprint CI/CD ([doc/reports/blueprint.md](doc/reports/blueprint.md)):**
    - Mô tả kiến trúc luồng dữ liệu bảo vệ nhiều lớp: `Input -> Presidio -> NeMo input -> RAG -> NeMo output -> Response`.
    - Định nghĩa hành động khi gặp lỗi (failure action), lưu vết (audit log) và cơ chế fallback.
    - Nhận số liệu độ trễ từ Người 3 để điền bảng latency (P50, P95, P99), giải thích bottleneck nếu vượt ngưỡng 500ms.
    - Đề xuất các ngưỡng CI gates (RAGAS $\ge 0.65$, Attacks $\ge 18/20$, Clean $8/8$, Latency target).
    - Thiết kế kế hoạch monitoring, xử lý data drift và false positives trong production.
 3. **Kiểm tra bài nộp toàn diện & Bàn giao:**
-   - Hoàn thiện file [doc/TEAM.md](file:///home/palm/Desktop/vin_ai20k/K4-Track-3A-Day24-ViaLactea-Eval-Guard/doc/TEAM.md): Nhắc nhở từng thành viên viết mục `INDIVIDUAL` (công việc đã làm, bài học rút ra, bằng chứng commit).
+   - Hoàn thiện file [doc/TEAM.md](doc/TEAM.md): Nhắc nhở từng thành viên viết mục `INDIVIDUAL` (công việc đã làm, bài học rút ra, bằng chứng commit).
    - Chạy kiểm tra hợp đồng bài nộp: `python scripts/check_lab.py --with-tests` (đảm bảo không còn bất kỳ cảnh báo hoặc lỗi schema nào).
    - Kiểm tra không để lọt API key hay `.env` vào git: `git check-ignore artifacts/*.json`.
    - Nộp link repo và commit hash đúng hạn.
