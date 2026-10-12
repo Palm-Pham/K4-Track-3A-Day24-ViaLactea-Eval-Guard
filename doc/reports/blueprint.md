@@ -2,7 +2,7 @@
 
 Nhóm: ViaLactea.
 
-Người phụ trách: Đinh Đức Long — 2A202602633.
+Người phụ trách: Đinh Đức Long - 2A202602633.
 
 Đây là **đề xuất CI/CD**, chưa có workflow chạy trên GitHub hay request production
 đi xuyên qua cả RAG và guardrails. Bằng chứng hiện có:
@@ -136,9 +136,9 @@ clean 8/8, FPR=0, outputs 4/4; đạt điều kiện chất lượng/bonus C, v�
 - Generator, judge và guard hiện cùng `gpt-6-luna`; thử model độc lập khi được
   cấp quyền để kiểm tra lỗi có thể lặp giữa các tầng và trade-off latency.
 
-## Phần sửa lỗi và tích hợp của Đinh Đức Long
+## Phần sửa lỗi và tích hợp 
 
-Đinh Đức Long (2A202602633) bổ sung các kiểm tra và chỉnh báo cáo khi tích hợp:
+Em đã bổ sung các kiểm tra và chỉnh báo cáo khi tích hợp:
 
 - Phase A: từ chối unavailable/partial, thiếu dòng/metric hoặc model metadata;
   không dùng điểm 0 thay kết quả chưa đo. Chỉnh báo cáo A về hybrid retrieval,
@@ -153,8 +153,5 @@ clean 8/8, FPR=0, outputs 4/4; đạt điều kiện chất lượng/bonus C, v�
 
 Kiểm chứng cuối: 103 tests offline pass, 3 integration deselected; checker
 0 failed checks. Chi tiết lỗi, files và bằng chứng cá nhân nằm trong mục
-`DinhDucLong-2A202602633` của `doc/TEAM.md`. Phần này ghi đóng góp sửa/tích hợp,
-không thay quyền tác giả triển khai ban đầu của Phạm Đình Bảo Khôi, Nguyễn Thị Hải Mi và Nguyễn Thị Lê Na.
+`DinhDucLong-2A202602633` của `doc/TEAM.md`. 
 
-Bộ 50/20/8/4 là phạm vi lab, chưa chứng minh an toàn/hiệu năng production.
-Đinh Đức Long tích hợp và nêu giới hạn; trưởng nhóm Phạm Đình Bảo Khôi xác nhận bản nộp.
