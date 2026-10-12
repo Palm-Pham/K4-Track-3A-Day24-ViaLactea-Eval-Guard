@@ -120,7 +120,5 @@ Key cấu hình riêng trong `.env`/biến môi trường, không nằm trong b�
 | Provenance A/B | Source hashes lệch khi Git đổi JSON từ LF sang CRLF | Khôi phục LF và thêm `.gitattributes` cho JSON; không sửa điểm, nhãn, timestamp hay hash trong metadata để làm checker đạt | Checker xác nhận nguồn/hash và phép tính A/B; diff JSON không có thay đổi nội dung |
 
 ## Cập nhật sau khi nộp
-
-Chưa xác nhận nhóm đã nộp bản nào. Trưởng nhóm chốt SHA và thời điểm nộp;
-nếu có sửa sau deadline, ghi commit/thời điểm/lý do và thông báo coach cho phép
-áp dụng bản cập nhật. Không khai working tree hiện tại là bản đã nộp.
+Nhóm nộp commit `0e1cbfa` vào lúc 23 giừo 58 phút
+ 
