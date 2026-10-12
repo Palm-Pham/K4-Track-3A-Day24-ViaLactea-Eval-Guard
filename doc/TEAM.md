@@ -10,12 +10,7 @@ Ngày kiểm tra bản tích hợp: 12/10/2026, Asia/Ho_Chi_Minh (UTC+07:00).
 Deadline mặc định 23:59 ngày lab; trưởng nhóm xác nhận ngày lab và điều chỉnh
 theo thông báo coach trước khi nộp.
 
-Commit dùng để chấm: chưa chốt. Bản sửa của Đinh Đức Long hiện chưa commit;
-trưởng nhóm ghi SHA cuối sau khi commit/push và kiểm tra đúng bản trên GitHub.
-
-Nhóm dùng một repo chung. Thông tin cá nhân dưới đây do Đinh Đức Long xác nhận;
-bằng chứng công việc đối chiếu source, artifacts/reports và lịch sử Git.
-Các mục tự đánh giá của Phạm Đình Bảo Khôi, Nguyễn Thị Hải Mi và Nguyễn Thị Lê Na cần chính thành viên xác nhận trước khi nộp.
+Commit dùng để chấm: 0e1cbfa
 
 ## Thành viên và phân công
 
