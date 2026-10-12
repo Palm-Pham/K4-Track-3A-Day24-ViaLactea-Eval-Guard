@@ -3,14 +3,12 @@ from __future__ import annotations
 """Phase C: Production Guardrails — Presidio PII + NeMo Guardrails + P95 Latency."""
 
 import asyncio
-import json
 import os
-import statistics
 import sys
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config import ADVERSARIAL_SET_PATH, GUARDRAILS_CONFIG_DIR, LATENCY_BUDGET_P95_MS, PRESIDIO_LANGUAGE
+from config import ADVERSARIAL_SET_PATH, GUARDRAILS_CONFIG_DIR, PRESIDIO_LANGUAGE
 
 
 # ─── Task 9a: Presidio PII Detection ─────────────────────────────────────────
@@ -91,6 +89,11 @@ def setup_nemo_rails():
     return rails
 
 
+def _normalize_for_echo_comparison(text: str) -> str:
+    """Collapse whitespace so an echoed answer cannot evade the fallback check."""
+    return " ".join(text.split())
+
+
 async def check_input_rail(text: str, rails=None) -> dict:
     """Task 9b: Kiểm tra input qua NeMo input rails (topic guard + jailbreak guard).
 
@@ -157,7 +160,9 @@ async def check_output_rail(question: str, answer: str, rails=None) -> dict:
     # NeMo normally returns the configured refusal when an output rail stops.
     # Fail closed if it returns an empty response or echoes the unsafe answer.
     final_answer = response.strip() if isinstance(response, str) else ""
-    if not final_answer or final_answer == answer:
+    if (not final_answer
+            or _normalize_for_echo_comparison(final_answer)
+            == _normalize_for_echo_comparison(answer)):
         final_answer = (
             "Xin lỗi, tôi không thể cung cấp nội dung này vì có thể chứa thông tin "
             "nhạy cảm."
@@ -238,40 +243,53 @@ def measure_p95_latency(test_inputs: list[str], n_runs: int = 20,
     percentiles at (n - 1) * q. Submission requires n_runs >= 20.
     Short-circuit request timing, RAG and output timing are outside this scope.
     """
-    # TODO: Implement sample collection (the statistics helper is provided).
-    # from src.experiment_support import summarize_latency
-    # if not test_inputs or n_runs < 1:
-    #     raise ValueError("Need inputs and n_runs >= 1")
-    # if analyzer is None or anonymizer is None:
-    #     analyzer, anonymizer = setup_presidio()
-    # if rails is None:
-    #     rails = setup_nemo_rails()
-    # async def _measure():
-    #     for i in range(2):
-    #         text = test_inputs[i % len(test_inputs)]
-    #         pii_scan(text, analyzer, anonymizer)
-    #         await check_input_rail(text, rails)
-    #     samples = []
-    #     for i in range(n_runs):
-    #         text = test_inputs[i % len(test_inputs)]
-    #         t0 = time.perf_counter()
-    #         pii_scan(text, analyzer, anonymizer)
-    #         pii_ms = (time.perf_counter() - t0) * 1000
-    #         t1 = time.perf_counter()
-    #         await check_input_rail(text, rails)
-    #         nemo_ms = (time.perf_counter() - t1) * 1000
-    #         samples.append({"presidio_ms": pii_ms, "nemo_input_ms": nemo_ms,
-    #                         "input_guard_ms": pii_ms + nemo_ms})
-    #     return samples
-    # return summarize_latency(asyncio.run(_measure()), warmup_runs=2)
-    return {
-        "scope": "input_layers_sequential", "percentile_method": "linear",
-        "n_samples": 0, "warmup_runs": 0, "samples": [],
-        "presidio_ms": {"p50": 0.0, "p95": 0.0, "p99": 0.0},
-        "nemo_input_ms": {"p50": 0.0, "p95": 0.0, "p99": 0.0},
-        "input_guard_ms": {"p50": 0.0, "p95": 0.0, "p99": 0.0},
-        "latency_budget_ok": False, "budget_ms": LATENCY_BUDGET_P95_MS,
-    }
+    from src.experiment_support import summarize_latency
+
+    if not test_inputs or any(not isinstance(text, str) or not text.strip() for text in test_inputs):
+        raise ValueError("test_inputs must contain at least one non-empty string")
+    if type(n_runs) is not int or n_runs < 20:
+        raise ValueError("n_runs must be an integer >= 20")
+    if analyzer is None or anonymizer is None:
+        default_analyzer, default_anonymizer = setup_presidio()
+        if analyzer is None:
+            analyzer = default_analyzer
+        if anonymizer is None:
+            anonymizer = default_anonymizer
+    if rails is None:
+        rails = setup_nemo_rails()
+
+    async def _measure():
+        # Warm both input layers twice. These calls initialize the real engines
+        # but are intentionally excluded from the timed samples.
+        for index in range(2):
+            text = test_inputs[index % len(test_inputs)]
+            pii_scan(text, analyzer, anonymizer)
+            await check_input_rail(text, rails)
+
+        samples = []
+        for index in range(n_runs):
+            text = test_inputs[index % len(test_inputs)]
+
+            started = time.perf_counter()
+            pii_scan(text, analyzer, anonymizer)
+            presidio_ms = (time.perf_counter() - started) * 1000
+
+            started = time.perf_counter()
+            # Always measure NeMo, including for a PII-positive input, so each
+            # sample describes both sequential layers rather than short-circuit latency.
+            await check_input_rail(text, rails)
+            nemo_input_ms = (time.perf_counter() - started) * 1000
+
+            if presidio_ms <= 0 or nemo_input_ms <= 0:
+                raise RuntimeError("Latency samples must have positive layer durations")
+            samples.append({
+                "presidio_ms": presidio_ms,
+                "nemo_input_ms": nemo_input_ms,
+                "input_guard_ms": presidio_ms + nemo_input_ms,
+            })
+        return samples
+
+    return summarize_latency(asyncio.run(_measure()), warmup_runs=2)
 
 
 # ─── Main ─────────────────────────────────────────────────────────────────────
