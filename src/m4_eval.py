@@ -118,16 +118,35 @@ def evaluate_ragas(questions: list[str], answers: list[str],
         connection = {"api_key": OPENAI_API_KEY, "timeout": API_TIMEOUT, "max_retries": 0}
         if OPENAI_BASE_URL:
             connection["base_url"] = OPENAI_BASE_URL
-        judge = ChatOpenAI(model=RAGAS_MODEL, temperature=0, **connection)
-        # Send raw text so older LangChain does not tokenize an OpenRouter-prefixed name.
-        embeddings = OpenAIEmbeddings(model=RAGAS_EMBEDDING_MODEL,
-                                      check_embedding_ctx_length=False, **connection)
+        temp = 1 if "luna" in str(RAGAS_MODEL).lower() or "o1" in str(RAGAS_MODEL).lower() else 0
+        judge = ChatOpenAI(model=RAGAS_MODEL, temperature=temp, **connection)
+
+        class ModelCompatibleLLMWrapper(LangchainLLMWrapper):
+            def get_temperature(self, n: int = 1):
+                return float(temp) if temp != 0 else 1e-8
+            def generate_text(self, prompt, n=1, temperature=None, stop=None, callbacks=None):
+                t = float(temp) if temp != 0 else (temperature or 1e-8)
+                return super().generate_text(prompt, n=n, temperature=t, stop=stop, callbacks=callbacks)
+            async def agenerate_text(self, prompt, n=1, temperature=None, stop=None, callbacks=None):
+                t = float(temp) if temp != 0 else (temperature or 1e-8)
+                return await super().agenerate_text(prompt, n=n, temperature=t, stop=stop, callbacks=callbacks)
+
+        try:
+            embeddings = OpenAIEmbeddings(model=RAGAS_EMBEDDING_MODEL,
+                                          check_embedding_ctx_length=False, **connection)
+            embeddings.embed_query("test")
+        except Exception:
+            from langchain_community.embeddings import HuggingFaceEmbeddings
+            local_model = getattr(config, "EMBEDDING_MODEL", "BAAI/bge-m3")
+            embeddings = HuggingFaceEmbeddings(model_name=local_model)
+            metadata["embedding_model"] = local_model
+            metadata["evaluator_models"] = [RAGAS_MODEL, local_model]
         dataset = Dataset.from_dict({"question": questions, "answer": answers,
                                      "contexts": [list(context) for context in contexts],
                                      "ground_truth": ground_truths})
         result = evaluate(dataset,
                           metrics=[faithfulness, answer_relevancy, context_precision, context_recall],
-                          llm=LangchainLLMWrapper(judge, run_config=run_config),
+                          llm=ModelCompatibleLLMWrapper(judge, run_config=run_config),
                           embeddings=LangchainEmbeddingsWrapper(embeddings),
                           run_config=run_config, raise_exceptions=False)
         records = result.to_pandas().to_dict(orient="records")
