@@ -75,6 +75,22 @@ def test_output_checks_supplied_answer(blocked):
     assert rails.generate_async.call_args.kwargs["options"]["rails"]==["output"]
 
 
+def test_output_rail_falls_back_when_blocked_response_echoes_with_spacing_changes():
+    answer="CCCD của nhân viên là 034095001234."
+    echoed_answer="CCCD của nhân viên  là 034095001234."
+    returned=SimpleNamespace(
+        response=[{"content":echoed_answer}],
+        log=SimpleNamespace(activated_rails=[SimpleNamespace(stop=True)]),
+    )
+    rails=SimpleNamespace(generate_async=AsyncMock(return_value=returned))
+
+    result=asyncio.run(phase.check_output_rail("question",answer,rails))
+
+    assert result["safe"] is False
+    assert result["final_answer"] != answer
+    assert "034095001234" not in result["final_answer"]
+
+
 @pytest.fixture(scope="module")
 def guard_batch():
     patch=pytest.MonkeyPatch()
