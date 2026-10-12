@@ -189,13 +189,18 @@ class DenseSearch:
             return []
         query_vector = self._encode(query).tolist()
         try:
-            response = self.client.query_points(collection_name=collection, query=query_vector,
-                                                limit=limit, with_payload=True)
+            if hasattr(self.client, "query_points"):
+                response = self.client.query_points(collection_name=collection, query=query_vector,
+                                                    limit=limit, with_payload=True)
+                points = response.points
+            else:
+                points = self.client.search(collection_name=collection, query_vector=query_vector,
+                                            limit=limit, with_payload=True)
         except Exception as exc:
             raise RuntimeError(f"Cannot query Qdrant collection {collection!r}; "
                                "index it with the configured embedding model first") from exc
         results = []
-        for point in response.points:
+        for point in points:
             payload = point.payload or {}
             stored_model = payload.get("_embedding_model")
             if stored_model and stored_model != self.model_name:
