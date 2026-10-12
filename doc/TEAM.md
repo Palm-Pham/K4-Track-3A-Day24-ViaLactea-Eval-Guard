@@ -24,7 +24,7 @@ Các mục tự đánh giá của Phạm Đình Bảo Khôi, Nguyễn Thị Hả
 | 1 | Phạm Đình Bảo Khôi | 2A202602434 | Pipeline m1–m5, Tasks 1–4, chạy A và failure_clusters.md; trưởng nhóm | `653019b`, `b476c9f`; answers/ragas JSON và báo cáo A |
 | 2 | Nguyễn Thị Hải Mi | 2A202602667 | Tasks 5–8, chạy B và bias_report.md | `074976d`; judge_results.json và báo cáo B |
 | 3 | Nguyễn Thị Lê Na | 2A202602501 | Tasks 9a–12, guardrails, latency, sửa output echo và tests C | `0a316c9`, `664201a`, `0d06087`; phase_c_guard.py, test_phase_c.py |
-| 4 | Đinh Đức Long | 2A202602633 | Task 13, tích hợp, sửa adapter A/κ B và báo cáo A/B; runtime/model compatibility C, false positives và chạy live C | `840668b` cho phân công; bản sửa hiện tại chưa commit; Blueprint, guard_results.json và tests hồi quy A/B/C |
+| 4 | Đinh Đức Long | 2A202602633 | Task 13, tích hợp, sửa adapter A/κ B và báo cáo A/B; runtime/model compatibility C, false positives và chạy live C | `840668b`, `a2bff0b`; Blueprint, guard_results.json và tests hồi quy A/B/C |
 
 Người tích hợp: Đinh Đức Long. Batch A: Phạm Đình Bảo Khôi. Batch B: Nguyễn Thị
 Hải Mi. Batch C: Nguyễn Thị Lê Na; JSON cuối `guard_results.json` có timestamp
@@ -99,7 +99,7 @@ Key cấu hình riêng trong `.env`/biến môi trường, không nằm trong b�
   theo phạm vi Task 9a, chạy C live và điền số đo thật vào Blueprint.
 - Bằng chứng: code/tests A/B/C, `infra/Dockerfile.guard-live`,
   `guardrails/config.yml`, `artifacts/guard_results.json` và ba báo cáo trong
-  working tree; chưa commit.
+  working tree; commit `a2bff0b`.
 - Cách kiểm tra: viết tests hồi quy trước sửa (11 tests A, 2 tests B fail đúng
   lỗi), bổ sung tests cho chat/token và NER false positives, sửa tối thiểu rồi
   chạy toàn bộ suite: 103 passed, 3 integration deselected. Kiểm tra Presidio
@@ -123,12 +123,6 @@ Key cấu hình riêng trong `.env`/biến môi trường, không nằm trong b�
 | Code Phase B - Task 7 | Trả κ=0 khi hai bộ nhãn đồng nhất khiến κ không xác định; chấp nhận bool như nhãn 0/1 | Báo lỗi cho κ không xác định, chỉ nhận integer 0/1; không thay nhãn hoặc κ của thực nghiệm đang lưu | `src/phase_b_judge.py`; 10 tests B pass, 2 cases hồi quy fail trước sửa |
 | Báo cáo B | Nói không có answer dài hơn nhưng sai, trái với cặp ID 5 | Bổ sung ID 5 làm phản chứng, giữ giới hạn cỡ mẫu và phân biệt verbosity win rate với kết luận nguyên nhân bias | `doc/reports/bias_report.md`; đối chiếu `judge_results.json`, giữ κ=0.6153846 và verbosity win rate=0.4 |
 | Provenance A/B | Source hashes lệch khi Git đổi JSON từ LF sang CRLF | Khôi phục LF và thêm `.gitattributes` cho JSON; không sửa điểm, nhãn, timestamp hay hash trong metadata để làm checker đạt | Checker xác nhận nguồn/hash và phép tính A/B; diff JSON không có thay đổi nội dung |
-
-Các sửa này là đóng góp tích hợp của Đinh Đức Long, bổ sung cho phần triển khai gốc
-của Phạm Đình Bảo Khôi và Nguyễn Thị Hải Mi. Không khai lại Tasks 1–8 là do Đinh Đức Long viết toàn bộ. Kết quả
-kiểm tra cuối bản tích hợp: 103 tests offline pass, 3 integration deselected;
-`python scripts/check_lab.py` có 0 failed checks. JSON A cũ chưa chạy lại,
-nên giới hạn availability vẫn được ghi trong báo cáo.
 
 ## Cập nhật sau khi nộp
 
